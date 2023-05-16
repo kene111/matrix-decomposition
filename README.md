@@ -24,6 +24,7 @@ This repo contains the implementation of the matrix decomposition compression te
         }
   ```
  4. For your data, make sure the data column names are ```source_text``` and ```target_text```.
+ 5. k_info is the same as rank r used in the paper. ```The dimension of a matrix A is n x d, where r < nd/n+d. Think about it as how much information should be retained in the decomposed matrix.```
  
 ### To run application:
 1. Update the config.json file with the required parameters
