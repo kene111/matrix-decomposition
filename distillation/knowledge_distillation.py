@@ -10,14 +10,10 @@ class KnowledgeDistillation(nn.Module):
     self.student_optimizer = T.optim.AdamW(self.student_model.parameters(),lr=0.0001)
     self.feature_layers = feature_layers
 
-  def teacher_inference(self, batch):
-    output = self.teacher_model(**batch)
-    return output
-
   def _train_student(self, batch):
 
     # teachers outputs
-    teachers_outputs = self.teacher_inference(batch)
+    teachers_outputs = self.teacher_model(**batch)
  
     # student predictions
     s_outputs = self.student_model(**batch)

@@ -26,8 +26,8 @@ class Decomposition(nn.Module):
 
 
   def _get_feature_layers(self, model_layers):
+    # get the layers in the next work excluding the layers in the exclude_layers list
     feature_layers = []
-    #layers_keys = ["self_attn.k_proj","self_attn.v_proj","self_attn.q_proj","self_attn.out_proj","fc1","fc2"]
     exclude_layers = ["layer_norm","embed","lm_head","shared.weight", "final_logits_bias"]
     for layer in model_layers:
       if self._check_exclude_layers(layer, exclude_layers):

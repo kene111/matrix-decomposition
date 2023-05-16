@@ -13,6 +13,7 @@ class DistillationLoss(nn.Module):
     self.temperature = 10
 
   def _order_qkv_projections(self, layers):
+    # get the q,k,v linear projects keys
     proj_dict = defaultdict(list)
 
     for vals in layers:
@@ -28,33 +29,35 @@ class DistillationLoss(nn.Module):
     return proj_dict
 
   def _calc_attn_mtx(self, layer_state_dicts, q_projections, k_projections):
-      Amtx_list = []
-      for q,k in zip(q_projections,k_projections):    
-        q = layer_state_dicts[q]
-        k = layer_state_dicts[k]
-        kt = k.transpose(0,1)
-        Qkt = T.matmul(q,kt)
-        sftmx_ = self.softmax(Qkt)
-        Amtx_list.append(sftmx_)
-      return Amtx_list  
+    # calculate the attention matrix 
+    Amtx_list = []
+    for q,k in zip(q_projections,k_projections):    
+      q = layer_state_dicts[q]
+      k = layer_state_dicts[k]
+      kt = k.transpose(0,1)
+      Qkt = T.matmul(q,kt)
+      sftmx_ = self.softmax(Qkt)
+      Amtx_list.append(sftmx_)
+    return Amtx_list  
 
   def _calc_attn_matrix_loss(self, teacher, student, q_projections, k_projections):
+    # calculate the attention matrix loss between the teacher and the student model 
 
-      losses  = 0
+    losses  = 0
 
-      teacher_attn_matrix = self._calc_attn_mtx(teacher, q_projections, k_projections)
-      student_attn_matrix = self._calc_attn_mtx(student, q_projections, k_projections)
+    teacher_attn_matrix = self._calc_attn_mtx(teacher, q_projections, k_projections)
+    student_attn_matrix = self._calc_attn_mtx(student, q_projections, k_projections)
 
-      assert len(teacher_attn_matrix) == len(student_attn_matrix),"teacher and student batch attn matix length is not the same."
-      len_ = len(teacher_attn_matrix)
+    assert len(teacher_attn_matrix) == len(student_attn_matrix),"teacher and student batch attn matix length is not the same."
+    len_ = len(teacher_attn_matrix)
 
-      for i in range(len_ ):
-        loss = T.dist(teacher_attn_matrix[i], student_attn_matrix[i], p=2).item()
-        losses += loss
-      return losses / len_ , teacher_attn_matrix, student_attn_matrix
+    for i in range(len_ ):
+      loss = T.dist(teacher_attn_matrix[i], student_attn_matrix[i], p=2).item()
+      losses += loss
+    return losses / len_ , teacher_attn_matrix, student_attn_matrix
 
   def _calc_attn_head(self, qk_batch, state_dict_layer, v_batch):
-
+    # calculate the attention head for the model
       batch_qkT_v = []
       for qk, v in zip(qk_batch, v_batch):
         v = state_dict_layer[v]
@@ -64,28 +67,32 @@ class DistillationLoss(nn.Module):
       return batch_qkT_v
 
   def _calc_attn_head_loss(self, teacher_attn_matrix, student_attn_matrix, teacher, student, v):
-      losses = 0
-      student_attn_head = self._calc_attn_head(student_attn_matrix, student, v)
-      teacher_attn_head = self._calc_attn_head(teacher_attn_matrix, teacher, v)
+    # calculate the attention head loss between the teacher and the student model  
+    losses = 0
+    student_attn_head = self._calc_attn_head(student_attn_matrix, student, v)
+    teacher_attn_head = self._calc_attn_head(teacher_attn_matrix, teacher, v)
 
-      assert len(teacher_attn_head) == len(student_attn_head),"teacher and student batch attn head length is not the same."
-      len_ = len(teacher_attn_head)
+    assert len(teacher_attn_head) == len(student_attn_head),"teacher and student batch attn head length is not the same."
+    len_ = len(teacher_attn_head)
 
-      for i in range(len_):
-        loss = T.dist(teacher_attn_head[i], student_attn_head[i], p=2).item()
-        losses += loss
-      return losses/len_
+    for i in range(len_):
+      loss = T.dist(teacher_attn_head[i], student_attn_head[i], p=2).item()
+      losses += loss
+    return losses/len_
       
   def get_crossentropy_loss(self, y_, y):
+    # calculate the cross entropy loss between the actual targets and the student models ouput 
     cross_entropy_output_loss = self.crossentropy_loss(y_, y)
     return cross_entropy_output_loss
     
   def get_kd_loss(self, teacher_model_logits, student_model_logits):
+    # calculate the response distillation loss between the teacher logits and and the student logits 
     distill_loss = self.distillation_loss(F.log_softmax(student_model_logits / self.temperature, dim=1),
                                                    F.softmax(teacher_model_logits / self.temperature, dim=1))
     return distill_loss
 
   def get_fd_loss(self, teacher, student, layers):
+    # calculate the feature distillation loss between the teacher feature layers and the student student feature layers.
 
     loss_ = 0
     qkv_proj = self._order_qkv_projections(layers)
@@ -108,5 +115,6 @@ class DistillationLoss(nn.Module):
     return overall_fd_loss
 
   def total_distillation_loss(self, student_target_loss, distillation_loss, fd_loss):
+    # calcuate the overall loss, as discribed in the paper
     loss = self.alpha * student_target_loss + (1 - self.alpha) * distillation_loss + fd_loss
     return loss
