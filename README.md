@@ -20,6 +20,7 @@ This repo contains the implementation of the matrix decomposition compression te
         { 
         ...,
         "feature_layers": ['model.encoder.layers.0.self_attn.k_proj.weight', 'model.encoder.layers.0.self_attn.k_proj.bias', ...],
+        "decompose_layers": ['model.encoder.layers.0.self_attn.k_proj.weight', ...],
         ... 
         }
   ```
