@@ -1,3 +1,4 @@
+import os
 import json
 import torch as T
 import pandas as pd
@@ -46,6 +47,9 @@ for epoch in tqdm(range(compression_config["epoch"])):
         losses += compress_model(batch)
     average_loss = losses/data_batch
     print(f'Average Loss Epoch:{epoch}: ' + str(average_loss))
+
+if not os.path.isdir(compression_config["output_path"]):
+    os.mkdir(compression_config["output_path"])
 
 T.save(compress_model.student, compression_config["output_path"])
 print("End!")
