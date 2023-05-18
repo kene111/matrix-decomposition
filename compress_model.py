@@ -2,6 +2,7 @@ import json
 import torch as T
 import pandas as pd
 from tqdm import tqdm
+from decomposition import Decomposition
 
 
 def data_preprocessor():
@@ -46,5 +47,5 @@ for epoch in tqdm(range(compression_config["epoch"])):
     average_loss = losses/data_batch
     print(f'Average Loss Epoch:{epoch}: ' + str(average_loss))
 
-T.save(compress_model.student_model, compression_config["output_path"])
+T.save(compress_model.student, compression_config["output_path"])
 print("End!")

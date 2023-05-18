@@ -33,9 +33,11 @@ class MatrixDecomposition:
     
   def get_and_decompose_teacher_layers_into_student(self, student_layers):
     # get the specific layers from the teacher model or user input
+    layers_to_decompose = None
     if self.input_decompose_layers is not None:
       layers_to_decompose = self.select_layers_to_decompose(self.input_decompose_layers)
-    layers_to_decompose = self.select_layers_to_decompose(self.teacher_layers.keys())
+    else:
+      layers_to_decompose = self.select_layers_to_decompose(self.teacher_layers.keys())
 
     # decompose the teacher model layers into the student layer
     for layer in layers_to_decompose:

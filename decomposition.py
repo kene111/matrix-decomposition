@@ -1,7 +1,7 @@
 from torch import nn
-from .matrix_decomposition import MatrixDecomposition
-from .distillation.distillation_loss import DistillationLoss
-from .distillation.knowledge_distillation import KnowledgeDistillation
+from matrix_decomposition import MatrixDecomposition
+from distillation.distillation_loss import DistillationLoss
+from distillation.knowledge_distillation import KnowledgeDistillation
 
 
 class Decomposition(nn.Module):
